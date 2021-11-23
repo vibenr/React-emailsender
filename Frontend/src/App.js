@@ -49,6 +49,7 @@ function App() {
                   />
                   <button type="submit">Login</button>
                 </form>
+                 <a href="/register">Register</a>
               </div>
             </div>
           </Route>

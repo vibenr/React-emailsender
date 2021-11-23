@@ -2,6 +2,7 @@ const mongoose=require('mongoose');
  const bcrypt=require('bcryptjs');
 
 
+
 const registerschema=new mongoose.Schema({
     name:{
         type:String,
@@ -37,7 +38,7 @@ const newuser=new registermodel({
 
 newuser.save();
 
-}); */
+});  */
 
 
  module.exports=registermodel;

@@ -4,9 +4,12 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var app = express();
+let app = express();
+const registermodel=require('./Models/register');
 const validateemail = require('email-validator');
-const {mailsender}=require('./routes/index')
+const bcrypt=require('bcryptjs');
+const {mail}=require('./routes/index')
+
 const bodyParser = require('body-parser');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -19,36 +22,50 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+let urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 // catch 404 and forward to error handler
 
 
-app.get('/auth/login',async (req,res)=>{
-
-	const email = req.body.email;
-	const passwords = req.body.password;
-	if (!validateemail.validate(email)) {
-		res.json({ err: 'ENTER A VALID EMAIL' });
-	} else {
-		let user = registermodel.findOne({ email });
-		try {
-			if (await bcrypt.compare(passwords, user.password)) {
-				mailsender(email);
-				res.redirect('/');
-			}
-		} catch (e) {
-			res.json({ err: e });
-		}
-	}
-})
-
-
-app.post('/auth/register',async (req,res)=>{
+app.post("/auth/login",urlencodedParser,async (req,res)=>{
+	let email=req.body.email;
+	let password=req.body.password;
+  
 	
-	const { name, email, password } = req.body;
-	const getmail = await bcrypt.hash(password, 10, (err, hash) => {
+	let user=await registermodel.findOne({email});
+	
+	if(user==null){
+		return res.send("No Admin Found")
+	} 
+
+	  try{
+	   if(await bcrypt.compare(password,user.password))
+	   {
+		 res.redirect('/register');
+		 mail(email)
+	   }
+	   else{
+		 res.send('Not Allowed')
+	   }
+	  }
+	  catch(error){
+	   res.status(500).send("server error");
+	}
+		
+  
+  })  
+
+  
+app.post('/auth/register',urlencodedParser,async (req,res)=>{
+	
+const name=req.body.name;
+const password=req.body.password;
+const email=req.body.email;
+
+const getmail = await bcrypt.hash(password, 10, (err, hash) => {
 		const newuserdata = new registermodel({ name, email, password: hash });
 		newuserdata.save();
+		res.redirect('/login');
 	});
 	
 })
